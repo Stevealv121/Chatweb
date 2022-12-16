@@ -1,14 +1,18 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from '@next/font/google'
-import styles from '../styles/Home.module.css'
+import { signIn, useSession, signOut } from 'next-auth/react'
 
-const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
+  const { data } = useSession()
+  console.log(data);
+
   return (
     <>
       <h1>Golden Chat</h1>
+      {data ? <><h2>Logged in as {data?.user?.name}</h2>
+        <button onClick={() => signOut()}>Sign out</button></> :
+        <><h2>Not signed in</h2>
+          <button onClick={() => signIn('google')}>Sign in</button></>
+      }
     </>
   )
 }
