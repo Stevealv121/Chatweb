@@ -3,13 +3,13 @@ import gql from "graphql-tag";
 const typeDefs = gql`
   scalar Date
 
-  type User {
+  type SearchedUser {
     id: String
     username: String
   }
 
   type Query {
-    searchUsers(username: String!): [User]
+    searchUsers(username: String!): [SearchedUser]
   }
 
   type Mutation {

@@ -62,7 +62,7 @@ const Auth: React.FunctionComponent<IAuthProps> = ({ session, reloadSession }) =
                             value={username}
                             onChange={(event) => setUsername(event.target.value)} />
                         <Button width="100%" colorScheme="yellow" backgroundColor="#CC9900" color="white"
-                            onClick={onSubmit}>Save</Button>
+                            onClick={onSubmit} isLoading={loading}>Save</Button>
                     </>) : (
                     <>
                         <Text fontSize="3xl">GoldenChat</Text>
