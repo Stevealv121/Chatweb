@@ -13,7 +13,7 @@ import { WebSocketServer } from "ws";
 import { getSession } from "next-auth/react";
 import resolvers from "./graphql/resolvers";
 import typeDefs from "./graphql/typeDefs";
-//import { GraphQLContext, Session, SubscriptionContext } from "./util/types";
+import { GraphQLContext, Session } from "./util/types";
 import * as dotenv from "dotenv";
 import cors from "cors";
 import { json } from "body-parser";
@@ -100,15 +100,15 @@ const main = async () => {
         cors<cors.CorsRequest>(corsOptions),
         json(),
         expressMiddleware(server, {
-            // context: async ({ req }): Promise<GraphQLContext> => {
-            //     const session = await getSession({ req });
+            context: async ({ req }): Promise<GraphQLContext> => {
+                const session = await getSession({ req });
 
-            //     return { session: session as Session, prisma, pubsub };
-            // },
+                return { session: session as Session, prisma };
+            },
         })
     );
 
-    // server.applyMiddleware({ app, path: "/graphql", cors: corsOptions });
+    //server.applyMiddleware({ app, path: "/graphql", cors: corsOptions });
 
     const PORT = 4000;
 

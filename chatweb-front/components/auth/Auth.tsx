@@ -2,6 +2,10 @@ import { Session } from "next-auth";
 import { Center, Stack, Text, Button, Image, Input } from "@chakra-ui/react";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+import UserOperations from "../../graphql/operations/user";
+import { useMutation } from "@apollo/client";
+import { ICreateUsernameData, ICreateUsernameVariables } from "../../util/types";
+import toast from "react-hot-toast";
 
 interface IAuthProps {
     session: Session | null;
@@ -11,14 +15,40 @@ interface IAuthProps {
 const Auth: React.FunctionComponent<IAuthProps> = ({ session, reloadSession }) => {
 
     const [username, setUsername] = useState('');
+    const [createUsername, { loading, error }] = useMutation<ICreateUsernameData, ICreateUsernameVariables
+    >(UserOperations.Mutations.createUsername)
 
     const onSubmit = async () => {
+        if (!username) return;
         try {
-            /**CreateUsername mutation to send our username to the GraphQL API */
+            const { data } = await createUsername({
+                variables: {
+                    username,
+                },
+            });
 
+            if (!data?.createUsername) {
+                throw new Error();
+            }
+
+            if (data.createUsername.error) {
+                const {
+                    createUsername: { error },
+                } = data;
+
+                toast.error(error);
+                return;
+            }
+
+            toast.success("Username successfully created");
+
+            /**
+             * Reload session to obtain new username
+             */
+            reloadSession();
         } catch (error) {
-            console.log("OnSubmit error", error);
-
+            toast.error("There was an error");
+            console.log("onSubmit error", error);
         }
     }
 
@@ -28,7 +58,7 @@ const Auth: React.FunctionComponent<IAuthProps> = ({ session, reloadSession }) =
                 {session ? (
                     <>
                         <Text fontSize="3xl">Create Username</Text>
-                        <Input placeholder="Enter a username"
+                        <Input placeholder="Enter a username" _placeholder={{ color: "blue.100" }}
                             value={username}
                             onChange={(event) => setUsername(event.target.value)} />
                         <Button width="100%" colorScheme="yellow" backgroundColor="#CC9900" color="white"

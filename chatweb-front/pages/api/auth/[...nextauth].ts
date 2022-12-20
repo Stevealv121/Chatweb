@@ -12,4 +12,15 @@ export default NextAuth({
         }),
     ],
     secret: process.env.NEXTAUTH_SECRET,
+    callbacks: {
+        async session({ session, token, user }) {
+            const sessionUser = { ...session.user, ...user };
+
+            return Promise.resolve({
+                ...session,
+                user: sessionUser,
+            });
+        },
+
+    }
 })
