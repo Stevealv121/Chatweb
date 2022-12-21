@@ -20,7 +20,7 @@ const ConversationList: React.FC<IConversationListProps> = ({ session }) => {
                 <Text textAlign="center" fontWeight={500} color="whiteAlpha.800">
                     Find or start a conversation</Text>
             </Box>
-            <ConversationModal isOpen={isOpen} onClose={onClose} />
+            <ConversationModal session={session} isOpen={isOpen} onClose={onClose} />
         </Box>
     );
 };
