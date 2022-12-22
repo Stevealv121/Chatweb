@@ -35,3 +35,11 @@ export interface CreateConversationInput {
 export interface ConversationsData {
     conversations: Array<ConversationPopulated>
 }
+
+export interface ConversationCreatedSubscriptionData {
+    subscriptionData: {
+        data: {
+            conversationCreated: ConversationPopulated;
+        };
+    };
+}

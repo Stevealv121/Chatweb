@@ -1,7 +1,9 @@
 import { Prisma } from "@prisma/client";
 import console from "console";
 import { GraphQLError } from "graphql";
-import { GraphQLContext, ConversationPopulated } from "../../util/types";
+import { GraphQLContext, ConversationPopulated, ConversationCreatedSubscriptionPayload } from "../../util/types";
+import { withFilter } from "graphql-subscriptions";
+import { userIsConversationParticipant } from "../../util/functions";
 
 const resolvers = {
     Query: {
@@ -52,7 +54,7 @@ const resolvers = {
             args: { participantsIds: Array<string> }
             , context: GraphQLContext
         ): Promise<{ conversationId: string }> => {
-            const { session, prisma } = context;
+            const { session, prisma, pubsub } = context;
             const { participantsIds } = args;
             if (!session?.user) {
                 throw new GraphQLError("Not authorized");
@@ -78,15 +80,44 @@ const resolvers = {
 
                 });
 
-                // pubsub.publish("CONVERSATION_CREATED", {
-                //     conversationCreated: conversation,
-                // });
+                pubsub.publish("CONVERSATION_CREATED", {
+                    conversationCreated: conversation,
+                });
 
                 return { conversationId: conversation.id };
             } catch (error) {
                 console.log("createConversation error", error);
                 throw new GraphQLError("Error creating conversation");
             }
+        },
+    },
+    Subscription: {
+        conversationCreated: {
+            subscribe: withFilter(
+                (_: any, __: any, context: GraphQLContext) => {
+                    const { pubsub } = context;
+
+                    return pubsub.asyncIterator(["CONVERSATION_CREATED"]);
+                },
+                (
+                    payload: ConversationCreatedSubscriptionPayload,
+                    _,
+                    context: GraphQLContext
+                ) => {
+                    const { session } = context;
+
+                    if (!session?.user) {
+                        throw new GraphQLError("Not authorized");
+                    }
+
+                    const { id: userId } = session.user;
+                    const {
+                        conversationCreated: { participants },
+                    } = payload;
+
+                    return userIsConversationParticipant(participants, userId);
+                }
+            ),
         },
     },
 }

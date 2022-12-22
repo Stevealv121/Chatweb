@@ -13,7 +13,7 @@ import { WebSocketServer } from "ws";
 import { getSession } from "next-auth/react";
 import resolvers from "./graphql/resolvers";
 import typeDefs from "./graphql/typeDefs";
-import { GraphQLContext, Session } from "./util/types";
+import { GraphQLContext, Session, SubscriptionContext } from "./util/types";
 import * as dotenv from "dotenv";
 import cors from "cors";
 import { json } from "body-parser";
@@ -42,29 +42,29 @@ const main = async () => {
     const prisma = new PrismaClient();
     const pubsub = new PubSub();
 
-    // const getSubscriptionContext = async (
-    //     ctx: SubscriptionContext
-    // ): Promise<GraphQLContext> => {
-    //     ctx;
-    //     // ctx is the graphql-ws Context where connectionParams live
-    //     if (ctx.connectionParams && ctx.connectionParams.session) {
-    //         const { session } = ctx.connectionParams;
-    //         return { session, prisma, pubsub };
-    //     }
-    //     // Otherwise let our resolvers know we don't have a current user
-    //     return { session: null, prisma, pubsub };
-    // };
+    const getSubscriptionContext = async (
+        ctx: SubscriptionContext
+    ): Promise<GraphQLContext> => {
+        ctx;
+        // ctx is the graphql-ws Context where connectionParams live
+        if (ctx.connectionParams && ctx.connectionParams.session) {
+            const { session } = ctx.connectionParams;
+            return { session, prisma, pubsub };
+        }
+        // Otherwise let our resolvers know we don't have a current user
+        return { session: null, prisma, pubsub };
+    };
 
     // Save the returned server's info so we can shutdown this server later
     const serverCleanup = useServer(
         {
             schema,
-            // context: (ctx: SubscriptionContext) => {
-            //     // This will be run every time the client sends a subscription request
-            //     // Returning an object will add that information to our
-            //     // GraphQL context, which all of our resolvers have access to.
-            //     return getSubscriptionContext(ctx);
-            // },
+            context: (ctx: SubscriptionContext) => {
+                // This will be run every time the client sends a subscription request
+                // Returning an object will add that information to our
+                // GraphQL context, which all of our resolvers have access to.
+                return getSubscriptionContext(ctx);
+            },
         },
         wsServer
     );
@@ -103,7 +103,7 @@ const main = async () => {
             context: async ({ req }): Promise<GraphQLContext> => {
                 const session = await getSession({ req });
 
-                return { session: session as Session, prisma };
+                return { session: session as Session, prisma, pubsub };
             },
         })
     );
