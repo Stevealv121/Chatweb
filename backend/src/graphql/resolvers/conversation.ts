@@ -7,15 +7,22 @@ import { userIsConversationParticipant } from "../../util/functions";
 
 const resolvers = {
     Query: {
-        conversations: async (_: any, __: any, context: GraphQLContext):
-            Promise<Array<ConversationPopulated>> => {
+        conversations: async function getConversations(
+            _: any,
+            args: Record<string, never>,
+            context: GraphQLContext
+        ): Promise<Array<ConversationPopulated>> {
             const { session, prisma } = context;
+
             if (!session?.user) {
                 throw new GraphQLError("Not authorized");
             }
 
             try {
-                const { id: userId } = session.user;
+                const { id } = session.user;
+                /**
+                 * Find all conversations that user is part of
+                 */
                 const conversations = await prisma.conversation.findMany({
                     /**
                      * Below has been confirmed to be the correct
@@ -40,11 +47,10 @@ const resolvers = {
                  */
                 return conversations.filter(
                     (conversation) =>
-                        !!conversation.participants.find((user) => user.userId === userId)
+                        !!conversation.participants.find((p) => p.userId === id)
                 );
-
             } catch (error: any) {
-                console.log("conversations error", error);
+                console.log("error", error);
                 throw new GraphQLError(error?.message);
             }
         },
@@ -132,22 +138,21 @@ export const participantPopulated = Prisma.validator<Prisma.ConversationParticip
     }
 })
 
-export const conversationPopulated = Prisma.validator<Prisma.ConversationInclude>()({
-    participants: {
-        include: participantPopulated,
-
-    },
-    latestMessage: {
-        include: {
-            sender: {
-                select: {
-                    id: true,
-                    username: true,
-                }
-            }
-        }
-    }
-
-})
+export const conversationPopulated =
+    Prisma.validator<Prisma.ConversationInclude>()({
+        participants: {
+            include: participantPopulated,
+        },
+        latestMessage: {
+            include: {
+                sender: {
+                    select: {
+                        id: true,
+                        username: true,
+                    },
+                },
+            },
+        },
+    });
 
 export default resolvers;

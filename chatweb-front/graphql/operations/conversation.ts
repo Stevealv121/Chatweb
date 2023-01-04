@@ -1,25 +1,20 @@
 /* eslint-disable import/no-anonymous-default-export */
 import { gql } from '@apollo/client';
+import { MessageFields } from './message';
 
-export const conversationFields = `
-    id
-    participants{
-        user{
-            id
-            username
-        }
-        hasSeenLatestMessage
+const ConversationFields = `
+  id
+  updatedAt
+  participants {
+    user {
+      id
+      username
     }
-    latestMessage{
-        id
-        sender{
-            id
-            username
-        }
-        body
-        createdAt
-    }
-    updatedAt
+    hasSeenLatestMessage
+  }
+  latestMessage {
+    ${MessageFields}
+  }
 `;
 
 export default {
@@ -27,7 +22,7 @@ export default {
         conversations: gql`
             query Conversations {
                 conversations{
-                    ${conversationFields}
+                    ${ConversationFields}
                 }
             }
         `,
@@ -45,7 +40,7 @@ export default {
         conversationCreated: gql`
             subscription ConversationCreated {
                 conversationCreated{
-                    ${conversationFields}
+                    ${ConversationFields}
                 }
             }
         `,
