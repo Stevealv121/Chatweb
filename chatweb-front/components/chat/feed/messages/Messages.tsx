@@ -61,7 +61,7 @@ const Messages: React.FC<IMessagesProps> = ({ conversationId, userId }) => {
             )}
             {data?.messages && (
                 <Flex direction="column-reverse"
-                    overflowY="scroll"
+                    overflow="auto"
                     height="100%">
                     {data.messages.map((message) => (
                         <MessageItem message={message}
